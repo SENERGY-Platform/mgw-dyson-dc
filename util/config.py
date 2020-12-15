@@ -52,9 +52,7 @@ class Conf:
         host = "appapi.cp.dyson.com"
         auth_endpt = "v1/userregistration/authenticate?country="
         provisioning_endpt = "v1/provisioningservice/manifest"
-        poll_interval = 300
-        user = None
-        pw = None
+        poll_interval = 600
 
     @simple_env_var.section
     class Account:
