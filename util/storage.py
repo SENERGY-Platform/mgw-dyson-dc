@@ -45,7 +45,7 @@ class Storage:
                 values
             )
 
-    def read(self, table: str, **kwargs):
+    def read(self, table: str, **kwargs) -> tuple:
         statement = [
             "SELECT * FROM {}".format(table)
         ]
@@ -57,9 +57,8 @@ class Storage:
                 statement[1].append(value)
             statement[0] += " WHERE {}".format(" AND ".join(fields))
         with sqlite3.connect(self.__db_path) as conn:
-            cursor = conn.execute(*statement)
-            for item in cursor:
-                print(item)
+            conn.row_factory = sqlite3.Row
+            return tuple(dict(item) for item in conn.execute(*statement))
 
     def update(self, table: str, data: dict, **kwargs):
         d_fields = list()
