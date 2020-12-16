@@ -71,10 +71,7 @@ class Storage:
             f_fields.append("{}=(?)".format(field))
             values.append(value)
         with sqlite3.connect(self.__db_path) as conn:
-            conn.execute(
-                "UPDATE {} SET {} WHERE {}".format(table, ", ".join(d_fields), " AND ".join(f_fields)),
-                values
-            )
+            conn.execute("UPDATE {} SET {} WHERE {}".format(table, ", ".join(d_fields), " AND ".join(f_fields)), values)
 
     def delete(self, table: str, **kwargs):
         fields = list()
@@ -83,7 +80,4 @@ class Storage:
             fields.append("{}=(?)".format(field))
             values.append(value)
         with sqlite3.connect(self.__db_path) as conn:
-            conn.execute(
-                "DELETE FROM {} WHERE {}".format(table, " AND ".join(fields)),
-                values
-            )
+            conn.execute("DELETE FROM {} WHERE {}".format(table, " AND ".join(fields)), values)
