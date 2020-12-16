@@ -41,18 +41,16 @@ class Conf:
 
     @simple_env_var.section
     class Discovery:
+        cloud_url = "https://appapi.cp.dyson.com"
+        cloud_auth_api = "v1/userregistration/authenticate"
+        cloud_provisioning_api = "v1/provisioningservice/manifest"
+        cloud_min_delay = 600
+        db_path = "/opt/storage"
         device_id_prefix = None
         delay = 240
         ports = "1883;8883"
         ping_timeout = 2
         probe_timeout = 2
-
-    @simple_env_var.section
-    class Cloud:
-        host = "appapi.cp.dyson.com"
-        auth_endpt = "v1/userregistration/authenticate?country="
-        provisioning_endpt = "v1/provisioningservice/manifest"
-        poll_interval = 600
 
     @simple_env_var.section
     class Account:
