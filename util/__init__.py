@@ -18,6 +18,7 @@ from .config import *
 from .logger import *
 from .mqtt import *
 from .router import *
+from .storage import *
 import sys
 import random
 import time
@@ -27,7 +28,8 @@ __all__ = (
     config.__all__,
     logger.__all__,
     mqtt.__all__,
-    router.__all__
+    router.__all__,
+    storage.__all__
 )
 
 
