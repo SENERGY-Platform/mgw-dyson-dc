@@ -50,7 +50,6 @@ class Conf:
         device_id_prefix = None
         delay = 240
         ports = "1883;8883"
-        ping_timeout = 2
         probe_timeout = 2
 
     @simple_env_var.section
