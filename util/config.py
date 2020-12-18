@@ -51,6 +51,7 @@ class Conf:
         delay = 240
         ports = "1883;8883"
         probe_timeout = 2
+        ip_file = "/opt/host_ip"
 
     @simple_env_var.section
     class Account:
