@@ -45,6 +45,7 @@ class Conf:
         cloud_auth_api = "v1/userregistration/authenticate"
         cloud_provisioning_api = "v1/provisioningservice/manifest"
         cloud_delay = 600
+        grace_period = 86400
         db_path = "/opt/storage"
         device_id_prefix = None
         delay = 240
