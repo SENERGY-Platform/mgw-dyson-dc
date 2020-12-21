@@ -324,6 +324,8 @@ class Discovery(threading.Thread):
         logger.info("starting '{}' ...".format(self.name))
         self.__load_devices()
         last_cloud_check = 0
+        self.__refresh_local_storage()
+        last_cloud_check = time.time()
         while True:
             if time.time() - last_cloud_check > conf.Discovery.cloud_delay:
             try:
