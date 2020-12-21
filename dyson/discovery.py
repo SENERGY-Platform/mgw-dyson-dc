@@ -197,26 +197,6 @@ class Discovery(threading.Thread):
         self.__lock = threading.Lock()
         self.__local_storage = Storage(conf.Discovery.db_path, "devices", (Discovery.__devices_table,))
 
-    def __load_devices(self):
-        while True:
-            try:
-                items = self.__local_storage.read(Discovery.__devices_table[0])
-                if items:
-                    logger.info("loading '{}' devices from local storage ...".format(len(items)))
-                    for item in items:
-                        if item["id"] not in self.__device_pool:
-                            device = Device(**item)
-                            self.__mqtt_client.publish(
-                                topic=mgw_dc.dm.gen_device_topic(conf.Client.id),
-                                payload=json.dumps(mgw_dc.dm.gen_set_device_msg(device)),
-                                qos=1
-                            )
-                            self.__device_pool[item["id"]] = device
-                break
-            except Exception as ex:
-                logger.error("loading devices from local storage failed - {}".format(ex))
-                time.sleep(5)
-
     def __handle_new_device(self, device_id: str, data: dict):
         try:
             logger.info("adding '{}'".format(device_id))
