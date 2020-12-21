@@ -17,6 +17,7 @@
 
 from .device import *
 from .discovery import *
+from .session import *
 
 
 __all__ = (
