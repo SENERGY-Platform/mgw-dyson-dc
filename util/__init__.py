@@ -24,6 +24,7 @@ import random
 import time
 import Crypto.Cipher.AES
 import base64
+import typing
 
 
 __all__ = (
@@ -53,6 +54,15 @@ def diff(known: dict, unknown: dict):
     new = unknown_set - known_set
     intersection = known_set & unknown_set
     return new, missing, intersection
+
+
+def to_dict(items: typing.Sequence, unique_key: str):
+    _dict = dict()
+    for item in items:
+        _dict[item[unique_key]] = item
+        del _dict[item[unique_key]][unique_key]
+    return _dict
+
 
 def unpad(string):
     """
