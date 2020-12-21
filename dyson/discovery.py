@@ -221,7 +221,6 @@ class Discovery(threading.Thread):
     def __handle_new_device(self, device_id: str, data: dict):
         try:
             logger.info("found '{}' with id '{}'".format(data["name"], device_id))
-            self.__local_storage.create(Discovery.__devices_table[0], {"id": device_id, **data})
             device = Device(id=device_id, **data)
             self.__mqtt_client.publish(
                 topic=mgw_dc.dm.gen_device_topic(conf.Client.id),
