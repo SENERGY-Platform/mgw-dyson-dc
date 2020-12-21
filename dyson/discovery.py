@@ -309,16 +309,31 @@ class Discovery(threading.Thread):
         except Exception as ex:
             logger.error("refreshing local storage failed - {}".format(ex))
 
+    def __refresh_pool(self):
+        stored_devices = to_dict(self.__local_storage.read(Discovery.__devices_table[0]), "id")
+        new_devices, missing_devices, existing_devices = diff(self.__device_pool, stored_devices)
+        if new_devices:
+            for device_id in new_devices:
+                self.__handle_new_device(device_id, stored_devices[device_id])
+        if missing_devices:
+            for device_id in missing_devices:
+                self.__handle_missing_device(device_id)
+        if existing_devices:
+            for device_id in existing_devices:
+                self.__handle_existing_device(device_id, stored_devices[device_id])
+
     def run(self) -> None:
         if not self.__mqtt_client.connected():
             time.sleep(3)
         logger.info("starting {} ...".format(self.name))
         self.__refresh_local_storage()
         last_cloud_check = time.time()
+        self.__refresh_pool()
         while True:
             if time.time() - last_cloud_check > conf.Discovery.cloud_delay:
                 self.__refresh_local_storage()
                 last_cloud_check = time.time()
+                self.__refresh_pool()
             try:
                 
             except Exception as ex:
