@@ -200,6 +200,7 @@ class Discovery(threading.Thread):
     def __handle_new_device(self, device_id: str, data: dict):
         try:
             logger.info("adding '{}'".format(device_id))
+            del data["last_seen"]
             device = Device(id=device_id, **data)
             self.__mqtt_client.publish(
                 topic=mgw_dc.dm.gen_device_topic(conf.Client.id),
