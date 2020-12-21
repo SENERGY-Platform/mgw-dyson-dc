@@ -19,6 +19,8 @@ __all__ = ("Device", )
 
 
 from util import conf
+from .session import Session
+import typing
 import mgw_dc
 
 
@@ -32,6 +34,7 @@ class Device(mgw_dc.dm.Device):
         self.local_credentials = local_credentials
         self.last_seen = float(last_seen)
         self.ip_address = None
+        self.session: typing.Optional[Session] = None
 
     def __iter__(self):
         items = (
