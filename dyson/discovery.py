@@ -309,18 +309,21 @@ class Discovery(threading.Thread):
         except Exception as ex:
             logger.error("refreshing local storage failed - {}".format(ex))
 
-    def __refresh_pool(self):
-        stored_devices = to_dict(self.__local_storage.read(Discovery.__devices_table[0]), "id")
-        new_devices, missing_devices, existing_devices = diff(self.__device_pool, stored_devices)
-        if new_devices:
-            for device_id in new_devices:
-                self.__handle_new_device(device_id, stored_devices[device_id])
-        if missing_devices:
-            for device_id in missing_devices:
-                self.__handle_missing_device(device_id)
-        if existing_devices:
-            for device_id in existing_devices:
-                self.__handle_existing_device(device_id, stored_devices[device_id])
+    def __refresh_devices(self):
+        try:
+            stored_devices = to_dict(self.__local_storage.read(Discovery.__devices_table[0]), "id")
+            new_devices, missing_devices, existing_devices = diff(self.__device_pool, stored_devices)
+            if new_devices:
+                for device_id in new_devices:
+                    self.__handle_new_device(device_id, stored_devices[device_id])
+            if missing_devices:
+                for device_id in missing_devices:
+                    self.__handle_missing_device(device_id)
+            if existing_devices:
+                for device_id in existing_devices:
+                    self.__handle_existing_device(device_id, stored_devices[device_id])
+        except Exception as ex:
+            logger.error("refreshing devices failed - {}".format(ex))
 
     def run(self) -> None:
         if not self.__mqtt_client.connected():
@@ -328,14 +331,20 @@ class Discovery(threading.Thread):
         logger.info("starting {} ...".format(self.name))
         self.__refresh_local_storage()
         last_cloud_check = time.time()
-        self.__refresh_pool()
+        self.__refresh_devices()
         while True:
             if time.time() - last_cloud_check > conf.Discovery.cloud_delay:
                 self.__refresh_local_storage()
                 last_cloud_check = time.time()
-                self.__refresh_pool()
+                self.__refresh_devices()
             try:
-                
+                positive_hosts = probe_hosts(discover_hosts())
+                logger.debug(positive_hosts)
+                for device in self.__device_pool.values():
+                    if not device.session:
+                        for hostname, data in positive_hosts.items():
+                            if device.id.replace(conf.Discovery.device_id_prefix, "") in hostname:
+                                logger.info("found '{}' at '{}'".format(device.id, data[0]))
             except Exception as ex:
                 logger.error("discovery failed - {}".format(ex))
             time.sleep(conf.Discovery.delay)
