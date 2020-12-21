@@ -326,22 +326,6 @@ class Discovery(threading.Thread):
         last_cloud_check = 0
         while True:
             if time.time() - last_cloud_check > conf.Discovery.cloud_delay:
-                try:
-                    logger.info("refreshing local storage ...")
-                    last_cloud_check = time.time()
-                    remote_devices = get_cloud_devices(*get_cloud_credentials())
-                    new_devices, missing_devices, existing_devices = diff(self.__device_pool, remote_devices)
-                    if new_devices:
-                        for device_id in new_devices:
-                            self.__handle_new_device(device_id, remote_devices[device_id])
-                    if missing_devices:
-                        for device_id in missing_devices:
-                            self.__handle_missing_device(device_id)
-                    if existing_devices:
-                        for device_id in existing_devices:
-                            self.__handle_existing_device(device_id, remote_devices[device_id])
-                except Exception as ex:
-                    logger.error("refreshing local storage failed - {}".format(ex))
             try:
                 
             except Exception as ex:
