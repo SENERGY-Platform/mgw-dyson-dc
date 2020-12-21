@@ -29,17 +29,7 @@ class Device(mgw_dc.dm.Device):
         "475": conf.Senergy.dt_pure_cool_link,
     }
 
-    def __init__(self, id: str, model: str, name: str, local_credentials: str, last_seen: str):
+    def __init__(self, id: str, model: str, name: str, local_credentials: str):
         super().__init__(id=id, name=name, type=Device.__type_map[model], state=mgw_dc.dm.device_state.offline)
         self.local_credentials = local_credentials
-        self.last_seen = float(last_seen)
-        self.ip_address = None
         self.session: typing.Optional[Session] = None
-
-    def __iter__(self):
-        items = (
-            ("name", self.name),
-            ("ip_address", self.ip_address)
-        )
-        for item in items:
-            yield item
