@@ -46,6 +46,14 @@ def delay_start(min: int, max: int):
     time.sleep(delay)
 
 
+def diff(known: dict, unknown: dict):
+    known_set = set(known)
+    unknown_set = set(unknown)
+    missing = known_set - unknown_set
+    new = unknown_set - known_set
+    intersection = known_set & unknown_set
+    return new, missing, intersection
+
 def unpad(string):
     """
     From: https://github.com/CharlesBlonde/libpurecoollink
