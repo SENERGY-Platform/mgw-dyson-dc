@@ -321,13 +321,13 @@ class Discovery(threading.Thread):
     def run(self) -> None:
         if not self.__mqtt_client.connected():
             time.sleep(3)
-        logger.info("starting '{}' ...".format(self.name))
-        self.__load_devices()
-        last_cloud_check = 0
+        logger.info("starting {} ...".format(self.name))
         self.__refresh_local_storage()
         last_cloud_check = time.time()
         while True:
             if time.time() - last_cloud_check > conf.Discovery.cloud_delay:
+                self.__refresh_local_storage()
+                last_cloud_check = time.time()
             try:
                 
             except Exception as ex:
