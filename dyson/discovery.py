@@ -274,6 +274,49 @@ class Discovery(threading.Thread):
                 raise ex
         if device.local_credentials != data["local_credentials"]:
             device.local_credentials = data["local_credentials"]
+    def __refresh_local_storage(self):
+        try:
+            logger.info("refreshing local storage ...")
+            local_devices = to_dict(self.__local_storage.read(Discovery.__devices_table[0]), "id")
+            remote_devices = get_cloud_devices(*get_cloud_credentials())
+            new_devices, missing_devices, existing_devices = diff(local_devices, remote_devices)
+            if new_devices:
+                for device_id in new_devices:
+                    logger.info("adding '{}' ...".format(device_id))
+                    try:
+                        self.__local_storage.create(Discovery.__devices_table[0], {"id": device_id, **remote_devices[device_id]})
+                    except Exception as ex:
+                        logger.error("adding '{}' failed - {}".format(device_id, ex))
+            if missing_devices:
+                for device_id in missing_devices:
+                    try:
+                        device_data = self.__local_storage.read(Discovery.__devices_table[0], id=device_id)
+                        now = time.time()
+                        age = now - float(device_data[0]["last_seen"])
+                        if age > conf.Discovery.grace_period:
+                            logger.info("removing '{}' due to exceeded grace period ...".format(device_id))
+                            try:
+                                self.__local_storage.delete(Discovery.__devices_table[0], id=device_id)
+                            except Exception as ex:
+                                logger.error("removing '{}' failed - {}".format(device_id, ex))
+                        else:
+                            logger.info(
+                                "remaining grace period for missing '{}': {}s".format(
+                                    device_id,
+                                    conf.Discovery.grace_period - age
+                                )
+                            )
+                    except Exception as ex:
+                        logger.error("can't calculate grace period for missing '{}' - {}".format(device_id, ex))
+            if existing_devices:
+                for device_id in existing_devices:
+                    logger.info("updating '{}' ...".format(device_id))
+                    try:
+                        self.__local_storage.update(Discovery.__devices_table[0], remote_devices[device_id], id=device_id)
+                    except Exception as ex:
+                        logger.error("updating '{}' failed - {}".format(device_id, ex))
+        except Exception as ex:
+            logger.error("refreshing local storage failed - {}".format(ex))
 
     def run(self) -> None:
         if not self.__mqtt_client.connected():
