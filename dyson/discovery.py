@@ -220,7 +220,7 @@ class Discovery(threading.Thread):
 
     def __handle_new_device(self, device_id: str, data: dict):
         try:
-            logger.info("found '{}' with id '{}'".format(data["name"], device_id))
+            logger.info("adding '{}'".format(device_id))
             device = Device(id=device_id, **data)
             self.__mqtt_client.publish(
                 topic=mgw_dc.dm.gen_device_topic(conf.Client.id),
@@ -229,50 +229,42 @@ class Discovery(threading.Thread):
             )
             self.__device_pool[device_id] = device
         except Exception as ex:
-            logger.error("can't add '{}' - {}".format(device_id, ex))
+            logger.error("adding '{}' failed - {}".format(device_id, ex))
 
     def __handle_missing_device(self, device_id: str):
         try:
+            logger.info("removing '{}' ...".format(device_id))
             device = self.__device_pool[device_id]
-            logger.info(
-                "can't find '{}' with id '{}' last seen '{}'".format(
-                    device.name,
-                    device.id,
-                    datetime.datetime.utcfromtimestamp(device.last_seen)
-                )
+            self.__mqtt_client.publish(
+                topic=mgw_dc.dm.gen_device_topic(conf.Client.id),
+                payload=json.dumps(mgw_dc.dm.gen_delete_device_msg(device)),
+                qos=1
             )
-            if time.time() - device.last_seen > conf.Discovery.grace_period:
-                logger.info("removing '{}' due to exceeded grace period ...".format(device_id))
+            del self.__device_pool[device_id]
+        except Exception as ex:
+            logger.error("removing '{}' failed - {}".format(device_id, ex))
+
+    def __handle_existing_device(self, device_id: str, data: dict):
+        try:
+            logger.info("updating '{}' ...".format(device_id))
+            device = self.__device_pool[device_id]
+            if device.name != data["name"]:
+                name_bk = device.name
+                device.name = data["name"]
                 try:
                     self.__mqtt_client.publish(
                         topic=mgw_dc.dm.gen_device_topic(conf.Client.id),
-                        payload=json.dumps(mgw_dc.dm.gen_delete_device_msg(device)),
+                        payload=json.dumps(mgw_dc.dm.gen_set_device_msg(device)),
                         qos=1
                     )
-                    del self.__device_pool[device.id]
-                    self.__local_storage.delete(Discovery.__devices_table[0], id=device_id)
                 except Exception as ex:
-                    logger.error("can't remove '{}' - {}".format(device_id, ex))
+                    device.name = name_bk
+                    raise ex
+            if device.local_credentials != data["local_credentials"]:
+                device.local_credentials = data["local_credentials"]
         except Exception as ex:
-            logger.error("can't handle missing device '{}' - {}".format(device_id, ex))
+            logger.error("updating '{}' failed - {}".format(device_id, ex))
 
-    def __handle_existing_device(self, device_id: str, data: dict):
-        self.__local_storage.update(Discovery.__devices_table[0], data, id=device_id)
-        device = self.__device_pool[device_id]
-        if device.name != data["name"]:
-            name_bk = device.name
-            device.name = data["name"]
-            try:
-                self.__mqtt_client.publish(
-                    topic=mgw_dc.dm.gen_device_topic(conf.Client.id),
-                    payload=json.dumps(mgw_dc.dm.gen_set_device_msg(device)),
-                    qos=1
-                )
-            except Exception as ex:
-                device.name = name_bk
-                raise ex
-        if device.local_credentials != data["local_credentials"]:
-            device.local_credentials = data["local_credentials"]
     def __refresh_local_storage(self):
         try:
             logger.info("refreshing local storage ...")
