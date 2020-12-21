@@ -18,7 +18,7 @@
 __all__ = ("Discovery", )
 
 
-from util import get_logger, conf, MQTTClient, Storage
+from util import get_logger, conf, MQTTClient, Storage, diff, to_dict
 from .device import Device
 import urllib3
 import threading
@@ -176,15 +176,6 @@ def probe_hosts(hosts) -> dict:
     for worker in workers:
         worker.join()
     return positive_hosts
-
-
-def diff(known: dict, unknown: dict):
-    known_set = set(known)
-    unknown_set = set(unknown)
-    missing = known_set - unknown_set
-    new = unknown_set - known_set
-    intersection = known_set & unknown_set
-    return new, missing, intersection
 
 
 class Discovery(threading.Thread):
