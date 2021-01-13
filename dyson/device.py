@@ -19,8 +19,6 @@ __all__ = ("Device", )
 
 
 from util import conf
-from .session import Session
-import typing
 import mgw_dc
 
 
@@ -33,4 +31,4 @@ class Device(mgw_dc.dm.Device):
         super().__init__(id=id, name=name, type=Device.__type_map[model], state=mgw_dc.dm.device_state.offline)
         self.model = model
         self.local_credentials = local_credentials
-        self.session: typing.Optional[Session] = None
+        self.session = None
