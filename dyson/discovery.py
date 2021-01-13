@@ -20,6 +20,7 @@ __all__ = ("Discovery", )
 
 from util import get_logger, conf, MQTTClient, Storage, diff, to_dict
 from .device import Device
+from .session import Session
 import urllib3
 import threading
 import subprocess
