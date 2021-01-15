@@ -306,6 +306,17 @@ class Discovery(threading.Thread):
         except Exception as ex:
             logger.error("refreshing devices failed - {}".format(ex))
 
+    def __start_device_session(self, device: Device, location: tuple):
+        logger.info("found '{}' at '{}'".format(device.id, location[0]))
+        session = Session(
+            mqtt_client=self.__mqtt_client,
+            device=device,
+            ip=location[0],
+            port=location[1]
+        )
+        session.start()
+        self.__device_sessions[device.id] = session
+
     def run(self) -> None:
         if not self.__mqtt_client.connected():
             time.sleep(3)
