@@ -69,7 +69,6 @@ def get_cloud_devices(acc: str, pw: str):
                 devices["{}{}".format(conf.Discovery.device_id_prefix, item['Serial'])] = {
                     "name": item["Name"],
                     "model": item["ProductType"],
-                    # "serial": item['Serial'],
                     "local_credentials": item["LocalCredentials"],
                     "last_seen": time.time()
                 }
