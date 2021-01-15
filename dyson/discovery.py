@@ -189,9 +189,10 @@ class Discovery(threading.Thread):
         )
     )
 
-    def __init__(self, mqtt_client: MQTTClient):
+    def __init__(self, mqtt_client: MQTTClient, device_sessions: typing.Dict[str, Session]):
         super().__init__(name="discovery", daemon=True)
         self.__mqtt_client = mqtt_client
+        self.__device_sessions = device_sessions
         self.__device_pool: typing.Dict[str, Device] = dict()
         self.__refresh_flag = False
         self.__lock = threading.Lock()
