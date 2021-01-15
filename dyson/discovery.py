@@ -331,12 +331,19 @@ class Discovery(threading.Thread):
                 self.__refresh_devices()
             try:
                 positive_hosts = probe_hosts(discover_hosts())
-                logger.debug(positive_hosts)
                 for device in self.__device_pool.values():
-                    if not device.session:
+                    if device.id not in self.__device_sessions:
                         for hostname, data in positive_hosts.items():
                             if device.id.replace(conf.Discovery.device_id_prefix, "") in hostname:
-                                logger.info("found '{}' at '{}'".format(device.id, data[0]))
+                                self.__start_device_session(device=device, location=data)
+                                break
+                    else:
+                        if not self.__device_sessions[device.id].is_alive():
+                            del self.__device_sessions[device.id]
+                            for hostname, data in positive_hosts.items():
+                                if device.id.replace(conf.Discovery.device_id_prefix, "") in hostname:
+                                    self.__start_device_session(device=device, location=data)
+                                    break
             except Exception as ex:
                 logger.error("discovery failed - {}".format(ex))
             time.sleep(conf.Discovery.delay)
