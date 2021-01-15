@@ -31,4 +31,3 @@ class Device(mgw_dc.dm.Device):
         super().__init__(id=id, name=name, type=Device.__type_map[model], state=mgw_dc.dm.device_state.offline)
         self.model = model
         self.local_credentials = local_credentials
-        self.session = None
