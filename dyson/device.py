@@ -18,16 +18,12 @@
 __all__ = ("Device", )
 
 
-from util import conf
+from .model import Model, model_map
 import mgw_dc
 
 
 class Device(mgw_dc.dm.Device):
-    __type_map = {
-        "475": conf.Senergy.dt_pure_cool_link,
-    }
-
     def __init__(self, id: str, model: str, name: str, local_credentials: str):
-        super().__init__(id=id, name=name, type=Device.__type_map[model], state=mgw_dc.dm.device_state.offline)
-        self.model = model
+        self.model: Model = model_map[model]
         self.local_credentials = local_credentials
+        super().__init__(id=id, name=name, type=self.model.type, state=mgw_dc.dm.device_state.offline)
