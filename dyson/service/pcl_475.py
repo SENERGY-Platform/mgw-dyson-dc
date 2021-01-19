@@ -15,7 +15,6 @@
 """
 
 
-from ..session import Session
 import datetime
 import time
 
@@ -85,7 +84,7 @@ def push_sensor_readings(data: dict) -> dict:
     raise RuntimeError("sensors not ready")
 
 
-def set_power(session: Session, power: bool):
+def set_power(session, power: bool):
     state = session.device_state.copy()
     if power:
         state["fmod"] = "FAN"
@@ -94,7 +93,7 @@ def set_power(session: Session, power: bool):
     return _gen_set_state_msg(state)
 
 
-def get_power(session: Session) -> dict:
+def get_power(session) -> dict:
     state = session.device_state
     return {
         "power": _value_map[state["product-state"]["fmod"]],
@@ -102,7 +101,7 @@ def get_power(session: Session) -> dict:
     }
 
 
-def set_oscillation(session: Session, oscillation: bool):
+def set_oscillation(session, oscillation: bool):
     state = session.device_state.copy()
     if oscillation:
         state["oson"] = "ON"
@@ -111,7 +110,7 @@ def set_oscillation(session: Session, oscillation: bool):
     return _gen_set_state_msg(state)
 
 
-def get_oscillation(session: Session) -> dict:
+def get_oscillation(session) -> dict:
     state = session.device_state
     return {
         "oscillation": _value_map[state["product-state"]["oson"]],
@@ -119,13 +118,13 @@ def get_oscillation(session: Session) -> dict:
     }
 
 
-def set_speed(session: Session, speed: int):
+def set_speed(session, speed: int):
     state = session.device_state.copy()
     state["fnsp"] = "{:04d}".format(speed)
     return _gen_set_state_msg(state)
 
 
-def get_speed(session: Session) -> dict:
+def get_speed(session) -> dict:
     state = session.device_state
     return {
         "speed": 0 if state["product-state"]["fnsp"] == "AUTO" else int(state["product-state"]["fnsp"]),
@@ -133,7 +132,7 @@ def get_speed(session: Session) -> dict:
     }
 
 
-def set_monitoring(session: Session, monitoring: bool):
+def set_monitoring(session, monitoring: bool):
     state = session.device_state.copy()
     if monitoring:
         state["rhtm"] = "ON"
@@ -143,7 +142,7 @@ def set_monitoring(session: Session, monitoring: bool):
     return _gen_set_state_msg(state)
 
 
-def get_monitoring(session: Session) -> dict:
+def get_monitoring(session) -> dict:
     state = session.device_state
     return {
         "monitoring": _value_map[state["product-state"]["rhtm"]],
@@ -151,7 +150,7 @@ def get_monitoring(session: Session) -> dict:
     }
 
 
-def get_filter_life(session: Session) -> dict:
+def get_filter_life(session) -> dict:
     state = session.device_state
     return {
         "filter_life": round(int(state["product-state"]["filf"]) / 4300 * 100, 2),
