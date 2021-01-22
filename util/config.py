@@ -64,6 +64,7 @@ class Conf:
         sensor_interval = 10
         keepalive = 5
         logging = False
+        max_disconnects = 10
 
     @simple_env_var.section
     class StartDelay:
