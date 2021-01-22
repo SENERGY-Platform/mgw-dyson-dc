@@ -50,6 +50,7 @@ class Session(threading.Thread):
             target=self.__trigger_sensor_data,
             name="{}-sensor-trigger".format(self.name),
             daemon=True
+        ) if self.__device.model.gen_sensor_data_req_msg else None
         )
         self.device_state: typing.Optional[dict] = None
         self.trigger_sensor_data = False
