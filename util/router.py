@@ -27,15 +27,16 @@ logger = get_logger(__name__.split(".", 1)[-1])
 
 
 class Router:
-    def __init__(self, refresh_callback: typing.Callable, command_callback: typing.Callable):
+    def __init__(self, refresh_callback: typing.Callable, device_sessions: dict):
         self.__refresh_callback = refresh_callback
-        self.__command_callback = command_callback
+        self.__device_sessions = device_sessions
 
     def route(self, topic: str, payload: typing.AnyStr):
         try:
             if topic == mgw_dc.dm.gen_refresh_topic():
                 self.__refresh_callback()
             else:
-                self.__command_callback((*mgw_dc.com.parse_command_topic(topic), payload))
+                device_id, service_id = mgw_dc.com.parse_command_topic(topic)
+                self.__device_sessions[device_id].put_command((service_id, payload))
         except Exception as ex:
             logger.error("can't route message - {}\n{}: {}".format(ex, topic, payload))
