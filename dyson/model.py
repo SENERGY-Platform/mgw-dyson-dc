@@ -27,6 +27,8 @@ class Model:
     def __init__(
             self,
             type: str,
+            command_topic: str,
+            state_topic: str,
             msg_type_field: str,
             device_state_msg_types: tuple,
             set_services: dict,
@@ -38,6 +40,8 @@ class Model:
             push_readings_srv: typing.Optional[typing.Tuple[str, typing.Callable]] = None
     ):
         self.type = type
+        self.command_topic = command_topic
+        self.state_topic = state_topic
         self.msg_type_field = msg_type_field
         self.set_services = set_services
         self.get_services = get_services
@@ -50,6 +54,8 @@ class Model:
 
 
 pure_cool_link = Model(
+    command_topic="475/{}/command",
+    state_topic="475/{}/status/current",
     type=conf.Senergy.dt_pure_cool_link,
     msg_type_field="msg",
     set_services={
