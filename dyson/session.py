@@ -51,9 +51,16 @@ class Session(threading.Thread):
             name="{}-sensor-trigger".format(self.name),
             daemon=True
         ) if self.__device.model.gen_sensor_data_req_msg else None
+        self.__command_handler = threading.Thread(
+            target=self.__handle_command,
+            name="{}-command-handler".format(self.name),
+            daemon=True
         )
+        self.__command_queue = queue.Queue()
         self.device_state: typing.Optional[dict] = None
         self.trigger_sensor_data = False
+    def put_command(self, cmd: tuple):
+        self.__command_queue.put_nowait(cmd)
 
     def run(self):
         logger.info("starting {} ...".format(self.name))
@@ -91,6 +98,63 @@ class Session(threading.Thread):
                 break
             time.sleep(conf.Session.sensor_interval)
         logger.debug("{} exited".format(self.__sensor_trigger.name))
+
+    def __call_service(self, service: typing.Callable, data: typing.Optional[str] = None) -> dict:
+        if data:
+            return service(self, **json.loads(data))
+        else:
+            return service(self)
+
+    def __handle_command(self):
+        logger.debug("starting {} ...".format(self.__command_handler.name))
+        while not self.__stop:
+            try:
+                srv_id, cmd = self.__command_queue.get(timeout=30)
+                logger.debug("{}: '{}' <- '{}'".format(self.__command_handler.name, srv_id, cmd))
+                if not self.__session_client.is_connected():
+                    raise RuntimeError("not connected to device".format(self.__device.id))
+                if not self.device_state:
+                    raise RuntimeError("no device state available".format(self.__device.id))
+                cmd = json.loads(cmd)
+                resp = str()
+                if srv_id in self.__device.model.set_services:
+                    self.__session_client.publish(
+                        topic=self.__device.model.command_topic.format(self.__serial),
+                        payload=json.dumps(
+                            self.__call_service(
+                                self.__device.model.set_services[srv_id],
+                                cmd.get(mgw_dc.com.command.data)
+                            )
+                        ),
+                        qos=1
+                    )
+                elif srv_id in self.__device.model.get_services:
+                    resp = json.dumps(
+                        self.__call_service(self.__device.model.get_services[srv_id], cmd.get(mgw_dc.com.command.data))
+                    )
+                else:
+                    raise RuntimeError("service '{}' not supported".format(srv_id))
+                resp_msg = mgw_dc.com.gen_response_msg(cmd[mgw_dc.com.command.id], resp)
+                logger.debug("{}: '{}'".format(self.__command_handler.name, resp_msg))
+                try:
+                    self.__dc_client.publish(
+                        topic=mgw_dc.com.gen_response_topic(self.__device.id, srv_id),
+                        payload=json.dumps(resp_msg),
+                        qos=1
+                    )
+                except Exception as ex:
+                    logger.error(
+                        "{}: could not send response for '{}' - {}".format(
+                            self.__command_handler.name,
+                            cmd[mgw_dc.com.command.id],
+                            ex
+                        )
+                    )
+            except queue.Empty:
+                pass
+            except Exception as ex:
+                logger.error("{}: handling command failed - {}".format(self.__command_handler.name, ex))
+        logger.debug("{} exited".format(self.__command_handler.name))
 
     def __handle_state_data(self, data: dict):
         logger.debug("{}: got state data".format(self.name))
