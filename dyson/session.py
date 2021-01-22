@@ -76,6 +76,7 @@ class Session(threading.Thread):
                     ex
                 )
             )
+        self.__stop = True
         logger.info("{} exited".format(self.name))
 
     def __trigger_sensor_data(self):
