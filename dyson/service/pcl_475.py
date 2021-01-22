@@ -138,7 +138,6 @@ def set_monitoring(session, monitoring: bool):
         state["rhtm"] = "ON"
     else:
         state["rhtm"] = "OFF"
-    session.trigger_sensor_data = monitoring
     return _gen_set_state_msg(state)
 
 
