@@ -78,24 +78,16 @@ class Session(threading.Thread):
             )
         logger.info("{} exited".format(self.name))
 
-    def __trigger_device_state(self):
-        self.__session_client.publish(
-            '{}/{}/command'.format(self.__device.model.id, self.__serial),
-            json.dumps(self.__device.model.gen_state_req_msg()),
-            1
-        )
-
     def __trigger_sensor_data(self):
         logger.debug("starting {} ...".format(self.__sensor_trigger.name))
-        while True:
-            if self.__session_client.is_connected() and self.trigger_sensor_data:
-                logger.debug("triggering sensor data for '{}'".format(self.__device.id))
+        while not self.__stop:
+            if self.__session_client.is_connected():
+                logger.debug("{}: triggering sensor data".format(self.__sensor_trigger.name))
                 self.__session_client.publish(
-                    '{}/{}/command'.format(self.__device.model.id, self.__serial),
-                    json.dumps(self.__device.model.gen_sensor_data_req_msg())
+                    topic=self.__device.model.command_topic.format(self.__serial),
+                    payload=json.dumps(self.__device.model.gen_sensor_data_req_msg()),
+                    qos=1
                 )
-            if self.__stop:
-                break
             time.sleep(conf.Session.sensor_interval)
         logger.debug("{} exited".format(self.__sensor_trigger.name))
 
