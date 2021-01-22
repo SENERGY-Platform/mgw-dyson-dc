@@ -26,7 +26,6 @@ import typing
 class Model:
     def __init__(
             self,
-            id: str,
             type: str,
             msg_type_field: str,
             device_state_msg_types: tuple,
@@ -37,7 +36,6 @@ class Model:
             push_state_srv: typing.Optional[typing.Tuple[str, typing.Callable]] = None,
             push_readings_srv: typing.Optional[typing.Tuple[str, typing.Callable]] = None
     ):
-        self.id = id
         self.type = type
         self.msg_type_field = msg_type_field
         self.services = services
@@ -50,7 +48,6 @@ class Model:
 
 
 pure_cool_link = Model(
-    id="475",
     type=conf.Senergy.dt_pure_cool_link,
     msg_type_field="msg",
     services={
