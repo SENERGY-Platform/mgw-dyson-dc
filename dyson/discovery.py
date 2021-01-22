@@ -194,7 +194,7 @@ class Discovery(threading.Thread):
         self.__mqtt_client = mqtt_client
         self.__device_sessions = device_sessions
         self.__device_pool: typing.Dict[str, Device] = dict()
-        self.__refresh_flag = False
+        self.__publish_flag = False
         self.__lock = threading.Lock()
         self.__local_storage = Storage(conf.Discovery.db_path, "devices", (Discovery.__devices_table,))
 
@@ -325,6 +325,8 @@ class Discovery(threading.Thread):
         last_cloud_check = time.time()
         self.__refresh_devices()
         while True:
+            if self.__publish_flag:
+                self.__publish_devices(self.__publish_flag)
             if time.time() - last_cloud_check > conf.Discovery.cloud_delay:
                 self.__refresh_local_storage()
                 last_cloud_check = time.time()
@@ -347,3 +349,26 @@ class Discovery(threading.Thread):
             except Exception as ex:
                 logger.error("discovery failed - {}".format(ex))
             time.sleep(conf.Discovery.delay)
+
+    def __publish_devices(self, flag: int):
+        with self.__lock:
+            if self.__publish_flag == flag:
+                self.__publish_flag = 0
+        for device in self.__device_pool.values():
+            try:
+                self.__mqtt_client.publish(
+                    topic=mgw_dc.dm.gen_device_topic(conf.Client.id),
+                    payload=json.dumps(mgw_dc.dm.gen_set_device_msg(device)),
+                    qos=1
+                )
+            except Exception as ex:
+                logger.error("setting device '{}' failed - {}".format(device.id, ex))
+            if flag > 1 and device.state == mgw_dc.dm.device_state.online:
+                try:
+                    self.__mqtt_client.subscribe(topic=mgw_dc.com.gen_command_topic(device.id), qos=1)
+                except Exception as ex:
+                    logger.error("subscribing device '{}' failed - {}".format(device.id, ex))
+
+    def schedule_publish(self, subscribe: bool = False):
+        with self.__lock:
+            self.__publish_flag = max(self.__publish_flag, int(subscribe) + 1)
