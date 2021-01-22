@@ -70,5 +70,5 @@ pure_cool_link = Model(
 )
 
 model_map = {
-    pure_cool_link.id: pure_cool_link
+    "475": pure_cool_link
 }
