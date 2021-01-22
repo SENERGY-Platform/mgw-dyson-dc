@@ -58,7 +58,7 @@ class MQTTClient:
             logger.warning("disconnected from '{}' unexpectedly".format(conf.MsgBroker.host))
 
     def __on_message(self, client, userdata, message: paho.mqtt.client.MQTTMessage):
-        self.on_message()
+        self.on_message(message.topic, message.payload)
 
     def start(self):
         while True:
