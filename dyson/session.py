@@ -43,7 +43,7 @@ class Session(threading.Thread):
         self.__serial = credentials["serial"]
         self.__session_client.username_pw_set(username=credentials["serial"], password=credentials["apPasswordHash"])
         if conf.Session.logging:
-            self.__session_client.enable_logger(logger.getChild(self.__device.id))
+            self.__session_client.enable_logger(logger.getChild("{}-mqtt".format(self.name)))
         self.__stop = False
         self.__sensor_trigger = threading.Thread(
             target=self.__trigger_sensor_data,
@@ -91,7 +91,7 @@ class Session(threading.Thread):
         logger.debug("{} exited".format(self.__sensor_trigger.name))
 
     def __handle_state_data(self, data: dict):
-        logger.debug("got state data for '{}'".format(self.__device.id))
+        logger.debug("{}: got state data".format(self.name))
         self.device_state = data
         try:
             self.__dc_client.publish(
@@ -100,10 +100,10 @@ class Session(threading.Thread):
                 qos=1
             )
         except Exception as ex:
-            logger.error("can't publish state for '{}' - {}".format(self.__device.id, ex))
+            logger.error("{}: can't publish state - {}".format(self.name, ex))
 
     def __handle_sensor_data(self, data: dict):
-        logger.debug("got sensor data for '{}'".format(self.__device.id))
+        logger.debug("{}: got sensor data".format(self.name))
         try:
             self.__dc_client.publish(
                 topic=mgw_dc.com.gen_event_topic(self.__device.id, self.__device.model.push_readings_srv[0]),
@@ -111,7 +111,7 @@ class Session(threading.Thread):
                 qos=1
             )
         except Exception as ex:
-            logger.error("can't publish readings for '{}' - {}".format(self.__device.id, ex))
+            logger.error("{}: can't publish readings - {}".format(self.name, ex))
 
     def __on_message(self, client, userdata, message: paho.mqtt.client.MQTTMessage):
         try:
@@ -121,16 +121,13 @@ class Session(threading.Thread):
             elif payload[self.__device.model.msg_type_field] in self.__device.model.sensor_data_msg_types:
                 self.__handle_sensor_data(payload)
             else:
-                logger.warning("received unknown message type from '{}' - '{}'".format(self.__device.id, payload[self.__device.model.msg_type_field]))
+                logger.warning("{}: message type '{}' not supported".format(self.name, payload[self.__device.model.msg_type_field]))
         except Exception as ex:
-            logger.error("failed parse message from '{}' - {}".format(self.__device.id, ex))
+            logger.error("{}: parsing message failed - {}".format(self.name, ex))
 
     def __on_connect(self, client, userdata, flags, rc):
         if rc == 0:
-            logger.info("connected to '{}'".format(self.__device.id))
-            self.__session_client.subscribe("{}/{}/status/current".format(self.__device.model.id, self.__serial))
-            self.__trigger_device_state()
-            self.__device.state = mgw_dc.dm.device_state.online
+            logger.info("{}: connected".format(self.name))
             try:
                 self.__dc_client.publish(
                     topic=mgw_dc.dm.gen_device_topic(conf.Client.id),
@@ -142,11 +139,11 @@ class Session(threading.Thread):
             if not self.__sensor_trigger.is_alive():
                 self.__sensor_trigger.start()
         else:
-            logger.error("could not connect to '{}' - {}".format(self.__device.id, paho.mqtt.client.connack_string(rc)))
+            logger.error("{}: could not connect - {}".format(self.name, paho.mqtt.client.connack_string(rc)))
 
     def __on_disconnect(self, client, userdata, rc):
         if rc == 0:
-            logger.info("disconnected from '{}'".format(self.__device.id))
+            logger.info("{}: disconnected".format(self.name))
         else:
             logger.warning("disconnected from '{}' unexpectedly".format(self.__device.id))
         self.__device.state = mgw_dc.dm.device_state.offline
