@@ -69,8 +69,8 @@ class Session(threading.Thread):
             self.__session_client.loop_forever()
         except Exception as ex:
             logger.error(
-                "could not connect to '{}' at '{}' on '{}' - {}".format(
-                    self.__device.id,
+                "{}: could not connect to '{}' on '{}' - {}".format(
+                    self.name,
                     self.__ip,
                     self.__port,
                     ex
