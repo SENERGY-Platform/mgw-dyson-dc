@@ -58,7 +58,8 @@ class Session(threading.Thread):
         )
         self.__command_queue = queue.Queue()
         self.device_state: typing.Optional[dict] = None
-        self.trigger_sensor_data = False
+        self.__disconnect_count = 0
+
     def put_command(self, cmd: tuple):
         self.__command_queue.put_nowait(cmd)
 
@@ -188,15 +189,28 @@ class Session(threading.Thread):
         if rc == 0:
             logger.info("{}: connected".format(self.name))
             try:
+                self.__device.state = mgw_dc.dm.device_state.online
                 self.__dc_client.publish(
                     topic=mgw_dc.dm.gen_device_topic(conf.Client.id),
                     payload=json.dumps(mgw_dc.dm.gen_set_device_msg(self.__device)),
                     qos=1
                 )
+                self.__dc_client.subscribe(topic=mgw_dc.com.gen_command_topic(self.__device.id), qos=1)
             except Exception as ex:
-                logger.warning("can't update state of '{}' - {}".format(self.__device.id, ex))
-            if not self.__sensor_trigger.is_alive():
-                self.__sensor_trigger.start()
+                logger.error("{}: setting state failed - {}".format(self.name, ex))
+            try:
+                self.__session_client.subscribe(topic=self.__device.model.state_topic.format(self.__serial))
+                self.__session_client.publish(
+                    topic=self.__device.model.command_topic.format(self.__serial),
+                    payload=json.dumps(self.__device.model.gen_state_req_msg()),
+                    qos=1
+                )
+                if self.__sensor_trigger and not self.__sensor_trigger.is_alive():
+                    self.__sensor_trigger.start()
+                self.__disconnect_count = 0
+            except Exception as ex:
+                logger.error("{}: handling connect failed - {}".format(self.name, ex))
+                self.__session_client.disconnect()
         else:
             logger.error("{}: could not connect - {}".format(self.name, paho.mqtt.client.connack_string(rc)))
 
@@ -204,13 +218,18 @@ class Session(threading.Thread):
         if rc == 0:
             logger.info("{}: disconnected".format(self.name))
         else:
-            logger.warning("disconnected from '{}' unexpectedly".format(self.__device.id))
-        self.__device.state = mgw_dc.dm.device_state.offline
-        try:
-            self.__dc_client.publish(
-                topic=mgw_dc.dm.gen_device_topic(conf.Client.id),
-                payload=json.dumps(mgw_dc.dm.gen_set_device_msg(self.__device)),
-                qos=1
-            )
-        except Exception as ex:
-            logger.warning("can't update state of '{}' - {}".format(self.__device.id, ex))
+            logger.warning("{}: disconnected unexpectedly".format(self.name))
+        if self.__disconnect_count > conf.Session.max_disconnects:
+            self.__session_client.disconnect()
+        else:
+            try:
+                self.__device.state = mgw_dc.dm.device_state.offline
+                self.__dc_client.publish(
+                    topic=mgw_dc.dm.gen_device_topic(conf.Client.id),
+                    payload=json.dumps(mgw_dc.dm.gen_set_device_msg(self.__device)),
+                    qos=1
+                )
+                self.__dc_client.unsubscribe(topic=mgw_dc.com.gen_command_topic(self.__device.id))
+            except Exception as ex:
+                logger.warning("{}: setting state failed - {}".format(self.name, ex))
+        self.__disconnect_count += 1
