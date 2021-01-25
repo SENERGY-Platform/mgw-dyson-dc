@@ -7,6 +7,6 @@ RUN apk update && apk upgrade && apk add git gcc openssl-dev musl-dev libffi-dev
 WORKDIR /usr/src/app
 
 COPY . .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 CMD [ "python", "-u", "./dc.py"]
