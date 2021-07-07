@@ -4,7 +4,7 @@ FROM python:3-slim-buster
 LABEL org.opencontainers.image.source https://github.com/SENERGY-Platform/mgw-dyson-dc
 
 #RUN apk --no-cache add git gcc openssl-dev musl-dev libffi-dev
-RUN apt-get update && apt-get install -y git gcc libssl-dev musl-dev libffi-dev
+RUN apt-get update && apt-get install -y git gcc libssl-dev musl-dev libffi-dev iputils-ping
 
 WORKDIR /usr/src/app
 
