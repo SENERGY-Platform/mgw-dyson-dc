@@ -29,8 +29,9 @@ logging_levels = {
 }
 
 
-class LoggerError(Exception):
-    pass
+class LoggingLevelError(Exception):
+    def __init__(self, msg):
+        super().__init__("level '{}' not in {}".format(msg, tuple(logging_levels)))
 
 
 msg_fmt = '%(asctime)s - %(levelname)s: [%(name)s] %(message)s'
@@ -47,8 +48,7 @@ logger.addHandler(handler)
 
 def init_logger(level):
     if level not in logging_levels.keys():
-        err = "unknown log level '{}'".format(level)
-        raise LoggerError(err)
+        raise LoggingLevelError(level)
     logger.setLevel(logging_levels[level])
 
 
