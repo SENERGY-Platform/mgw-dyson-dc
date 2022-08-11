@@ -30,6 +30,7 @@ import json
 import typing
 import socket
 import mgw_dc
+import libdyson
 
 
 logger = get_logger(__name__.split(".", 1)[-1])
@@ -77,6 +78,25 @@ def get_cloud_devices(acc: str, pw: str):
             raise RuntimeError(resp.status_code)
     except Exception as ex:
         raise RuntimeError("retrieving devices from cloud failed - {}".format(ex))
+
+
+def get_static_device():
+    try:
+        serial, pw_hash, model = libdyson.get_mqtt_info_from_wifi_info(
+            wifi_ssid=conf.Discovery.device_wifi_ssid,
+            wifi_password=conf.Discovery.device_wifi_password
+        )
+        devices = {
+            "{}{}".format(conf.Discovery.device_id_prefix, serial): {
+                "name": conf.Discovery.device_name,
+                "model": model,
+                "local_credentials": "{" + '"serial": "{}", "apPasswordHash": "{}"'.format(serial, pw_hash) + "}",
+                "last_seen": time.time()
+            }
+        }
+        return devices
+    except Exception as ex:
+        raise RuntimeError("retrieving static device failed - {}".format(ex))
 
 
 def ping(host) -> bool:
@@ -241,8 +261,8 @@ class Discovery(threading.Thread):
                 except Exception as ex:
                     device.name = name_bk
                     raise ex
-            if device.local_credentials != data["local_credentials"]:
-                device.local_credentials = data["local_credentials"]
+            # if device.local_credentials != data["local_credentials"]:
+            #     device.local_credentials = data["local_credentials"]
         except Exception as ex:
             logger.error("updating '{}' failed - {}".format(device_id, ex))
 
@@ -250,7 +270,8 @@ class Discovery(threading.Thread):
         try:
             logger.info("refreshing local storage ...")
             local_devices = to_dict(self.__local_storage.read(Discovery.__devices_table[0]), "id")
-            remote_devices = get_cloud_devices(*get_cloud_credentials())
+            # remote_devices = get_cloud_devices(*get_cloud_credentials())
+            remote_devices = get_static_device()
             new_devices, missing_devices, existing_devices = diff(local_devices, remote_devices)
             if new_devices:
                 for device_id in new_devices:

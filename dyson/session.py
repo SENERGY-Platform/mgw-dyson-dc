@@ -40,7 +40,8 @@ class Session(threading.Thread):
         self.__session_client.on_connect = self.__on_connect
         self.__session_client.on_disconnect = self.__on_disconnect
         self.__session_client.on_message = self.__on_message
-        credentials = json.loads(decrypt_password(device.local_credentials))
+        # credentials = json.loads(decrypt_password(device.local_credentials))
+        credentials = json.loads(device.local_credentials)
         self.__serial = credentials["serial"]
         self.__session_client.username_pw_set(username=credentials["serial"], password=credentials["apPasswordHash"])
         if conf.Session.logging:
