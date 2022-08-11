@@ -87,7 +87,7 @@ def push_sensor_readings(data: dict) -> dict:
 
 
 def set_power(session, power: bool):
-    state = session.device_state.copy()
+    state = session.device_state["product-state"].copy()
     if power:
         state["fmod"] = "FAN"
     else:
@@ -104,7 +104,7 @@ def get_power(session) -> dict:
 
 
 def set_oscillation(session, oscillation: bool):
-    state = session.device_state.copy()
+    state = session.device_state["product-state"].copy()
     if oscillation:
         state["oson"] = "ON"
     else:
@@ -121,7 +121,7 @@ def get_oscillation(session) -> dict:
 
 
 def set_speed(session, speed: int):
-    state = session.device_state.copy()
+    state = session.device_state["product-state"].copy()
     state["fnsp"] = "{:04d}".format(speed)
     return _gen_set_state_msg(state)
 
@@ -135,7 +135,7 @@ def get_speed(session) -> dict:
 
 
 def set_monitoring(session, monitoring: bool):
-    state = session.device_state.copy()
+    state = session.device_state["product-state"].copy()
     if monitoring:
         state["rhtm"] = "ON"
     else:
