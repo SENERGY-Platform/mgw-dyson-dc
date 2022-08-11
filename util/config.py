@@ -52,6 +52,9 @@ class Conf:
         ports = "1883;8883"
         probe_timeout = 2
         ip_file = "/opt/host_ip"
+        device_wifi_ssid = None
+        device_wifi_password = None
+        device_name = None
 
     @simple_env_var.section
     class Account:
