@@ -73,6 +73,8 @@ def push_device_state(data: dict) -> dict:
 
 
 def push_sensor_readings(data: dict) -> dict:
+    if "sltm" in data:
+        del data["sltm"]
     if all(val not in ("OFF", "INIT") for val in data["data"].values()):
         return {
             "temperature": int(data["data"]["tact"]) / 10,
