@@ -209,6 +209,8 @@ class Session(threading.Thread):
                 )
                 if self.__sensor_trigger and not self.__sensor_trigger.is_alive():
                     self.__sensor_trigger.start()
+                if not self.__command_handler.is_alive():
+                    self.__command_handler.start()
                 self.__disconnect_count = 0
             except Exception as ex:
                 logger.error("{}: handling connect failed - {}".format(self.name, ex))
