@@ -177,6 +177,7 @@ class Session(threading.Thread):
     def __on_message(self, client, userdata, message: paho.mqtt.client.MQTTMessage):
         try:
             payload = json.loads(message.payload)
+            logger.debug("{}: got message '{}'".format(self.name, payload))
             if payload[self.__device.model.msg_type_field] in self.__device.model.device_state_msg_types:
                 self.__handle_state_data(payload)
             elif payload[self.__device.model.msg_type_field] in self.__device.model.sensor_data_msg_types:
