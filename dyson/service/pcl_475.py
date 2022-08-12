@@ -62,7 +62,7 @@ def parse_device_state(data: dict) -> dict:
     if data["msg"] == "CURRENT-STATE":
         return data["product-state"]
     elif data["msg"] == "STATE-CHANGE":
-        return {key: val[1] for key, val in data["product-state"]}
+        return {key: val[1] for key, val in data["product-state"].values()}
     else:
         raise RuntimeError("unknown state type")
 
