@@ -111,9 +111,8 @@ class Session(threading.Thread):
                 if not self.device_state:
                     raise RuntimeError("no device state available".format(self.__device.id))
                 cmd = json.loads(cmd)
-                resp = str()
                 if srv_id in self.__device.model.set_services:
-                    self.__session_client.publish(
+                    msg_info = self.__session_client.publish(
                         topic=self.__device.model.command_topic.format(self.__serial),
                         payload=json.dumps(
                             self.__call_service(
@@ -123,6 +122,17 @@ class Session(threading.Thread):
                         ),
                         qos=1
                     )
+                    try:
+                        msg_info.wait_for_publish(timeout=10)
+                    except Exception as ex:
+                        logger.error(
+                            "{}: could not send command '{}' to device - {}".format(
+                                self.__command_handler.name,
+                                cmd[mgw_dc.com.command.id],
+                                ex
+                            )
+                        )
+                    resp = json.dumps({"status": paho.mqtt.client.error_string(msg_info.rc)})
                 elif srv_id in self.__device.model.get_services:
                     resp = json.dumps(
                         self.__call_service(self.__device.model.get_services[srv_id], cmd.get(mgw_dc.com.command.data))
