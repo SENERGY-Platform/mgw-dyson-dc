@@ -78,7 +78,8 @@ pure_cool_link = Model(
     device_state_msg_types=("CURRENT-STATE", "STATE-CHANGE"),
     sensor_data_msg_types=("ENVIRONMENTAL-CURRENT-SENSOR-DATA", ),
     push_state_srv=("getDeviceState", service.pcl_475.push_device_state),
-    push_readings_srv=("getSensorReadings", service.pcl_475.push_sensor_readings)
+    push_readings_srv=("getSensorReadings", service.pcl_475.push_sensor_readings),
+    parse_device_state=service.pcl_475.parse_device_state
 )
 
 model_map = {
