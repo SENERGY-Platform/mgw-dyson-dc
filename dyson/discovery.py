@@ -343,15 +343,15 @@ class Discovery(threading.Thread):
             time.sleep(3)
         logger.info("starting {} ...".format(self.name))
         self.__refresh_local_storage()
-        last_cloud_check = time.time()
+        # last_cloud_check = time.time()
         self.__refresh_devices()
         while True:
             if self.__publish_flag:
                 self.__publish_devices(self.__publish_flag)
-            if time.time() - last_cloud_check > conf.Discovery.cloud_delay:
-                self.__refresh_local_storage()
-                last_cloud_check = time.time()
-                self.__refresh_devices()
+            # if time.time() - last_cloud_check > conf.Discovery.cloud_delay:
+            #     self.__refresh_local_storage()
+            #     last_cloud_check = time.time()
+            #     self.__refresh_devices()
             try:
                 positive_hosts = probe_hosts(discover_hosts())
                 for device in self.__device_pool.values():
