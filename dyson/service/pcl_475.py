@@ -29,11 +29,11 @@ _value_map = {
 
 def _transform_device_state(data: dict) -> dict:
     return {
-        "power": _value_map[data["product-state"]["fmod"]],
-        "oscillation": _value_map[data["product-state"]["oson"]],
-        "speed": 0 if data["product-state"]["fnsp"] == "AUTO" else int(data["product-state"]["fnsp"]),
-        "monitoring": _value_map[data["product-state"]["rhtm"]],
-        "filter_life": round(int(data["product-state"]["filf"]) / 4300 * 100, 2)
+        "power": _value_map[data["fmod"]],
+        "oscillation": _value_map[data["oson"]],
+        "speed": 0 if data["fnsp"] == "AUTO" else int(data["fnsp"]),
+        "monitoring": _value_map[data["rhtm"]],
+        "filter_life": round(int(data["filf"]) / 4300 * 100, 2)
     }
 
 
@@ -96,7 +96,7 @@ def push_sensor_readings(data: dict) -> dict:
 
 
 def set_power(session, power: bool):
-    state = session.device_state["product-state"].copy()
+    state = session.device_state.copy()
     if power:
         state["fmod"] = "FAN"
     else:
@@ -105,15 +105,14 @@ def set_power(session, power: bool):
 
 
 def get_power(session) -> dict:
-    state = session.device_state
     return {
-        "power": _value_map[state["product-state"]["fmod"]],
+        "power": _value_map[session.device_state["fmod"]],
         "time": "{}Z".format(datetime.datetime.utcnow().isoformat())
     }
 
 
 def set_oscillation(session, oscillation: bool):
-    state = session.device_state["product-state"].copy()
+    state = session.device_state.copy()
     if oscillation:
         state["oson"] = "ON"
     else:
@@ -122,29 +121,27 @@ def set_oscillation(session, oscillation: bool):
 
 
 def get_oscillation(session) -> dict:
-    state = session.device_state
     return {
-        "oscillation": _value_map[state["product-state"]["oson"]],
+        "oscillation": _value_map[session.device_state["oson"]],
         "time": "{}Z".format(datetime.datetime.utcnow().isoformat())
     }
 
 
 def set_speed(session, speed: int):
-    state = session.device_state["product-state"].copy()
+    state = session.device_state.copy()
     state["fnsp"] = "{:04d}".format(speed)
     return _gen_set_state_msg(state)
 
 
 def get_speed(session) -> dict:
-    state = session.device_state
     return {
-        "speed": 0 if state["product-state"]["fnsp"] == "AUTO" else int(state["product-state"]["fnsp"]),
+        "speed": 0 if session.device_state["fnsp"] == "AUTO" else int(session.device_state["fnsp"]),
         "time": "{}Z".format(datetime.datetime.utcnow().isoformat())
     }
 
 
 def set_monitoring(session, monitoring: bool):
-    state = session.device_state["product-state"].copy()
+    state = session.device_state.copy()
     if monitoring:
         state["rhtm"] = "ON"
     else:
@@ -153,16 +150,14 @@ def set_monitoring(session, monitoring: bool):
 
 
 def get_monitoring(session) -> dict:
-    state = session.device_state
     return {
-        "monitoring": _value_map[state["product-state"]["rhtm"]],
+        "monitoring": _value_map[session.device_state["rhtm"]],
         "time": "{}Z".format(datetime.datetime.utcnow().isoformat())
     }
 
 
 def get_filter_life(session) -> dict:
-    state = session.device_state
     return {
-        "filter_life": round(int(state["product-state"]["filf"]) / 4300 * 100, 2),
+        "filter_life": round(int(session.device_state["filf"]) / 4300 * 100, 2),
         "time": "{}Z".format(datetime.datetime.utcnow().isoformat())
     }
