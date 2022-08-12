@@ -27,7 +27,7 @@ _value_map = {
 }
 
 
-def _parse_device_state(data: dict) -> dict:
+def _transform_device_state(data: dict) -> dict:
     return {
         "power": _value_map[data["product-state"]["fmod"]],
         "oscillation": _value_map[data["product-state"]["oson"]],
@@ -76,7 +76,7 @@ def gen_sensor_data_req_msg():
 
 
 def push_device_state(data: dict) -> dict:
-    state = _parse_device_state(data)
+    state = _transform_device_state(data)
     state["time"] = "{}Z".format(datetime.datetime.utcnow().isoformat())
     return state
 
