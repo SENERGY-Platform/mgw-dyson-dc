@@ -152,7 +152,6 @@ class Session(threading.Thread):
         logger.debug("{} exited".format(self.__command_handler.name))
 
     def __handle_state_data(self, data: dict):
-        logger.debug("{}: got state data".format(self.name))
         self.device_state = self.__device.model.parse_device_state(data) if self.__device.model.parse_device_state else data
         try:
             self.__dc_client.publish(
@@ -164,7 +163,6 @@ class Session(threading.Thread):
             logger.error("{}: can't publish state - {}".format(self.name, ex))
 
     def __handle_sensor_data(self, data: dict):
-        logger.debug("{}: got sensor data".format(self.name))
         try:
             self.__dc_client.publish(
                 topic=mgw_dc.com.gen_event_topic(self.__device.id, self.__device.model.push_readings_srv[0]),
