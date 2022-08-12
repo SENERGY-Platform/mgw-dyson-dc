@@ -153,11 +153,11 @@ class Session(threading.Thread):
 
     def __handle_state_data(self, data: dict):
         logger.debug("{}: got state data".format(self.name))
-        self.device_state = data
+        self.device_state = self.__device.model.parse_device_state(data) if self.__device.model.parse_device_state else data
         try:
             self.__dc_client.publish(
                 topic=mgw_dc.com.gen_event_topic(self.__device.id, self.__device.model.push_state_srv[0]),
-                payload=json.dumps(self.__device.model.push_state_srv[1](data)),
+                payload=json.dumps(self.__device.model.push_state_srv[1](self.device_state)),
                 qos=1
             )
         except Exception as ex:
