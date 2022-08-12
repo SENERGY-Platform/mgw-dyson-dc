@@ -37,7 +37,8 @@ class Model:
             gen_sensor_data_req_msg: typing.Optional[typing.Callable] = None,
             sensor_data_msg_types: typing.Optional[tuple] = tuple(),
             push_state_srv: typing.Optional[typing.Tuple[str, typing.Callable]] = None,
-            push_readings_srv: typing.Optional[typing.Tuple[str, typing.Callable]] = None
+            push_readings_srv: typing.Optional[typing.Tuple[str, typing.Callable]] = None,
+            parse_device_state: typing.Optional[typing.Callable] = None
     ):
         self.type = type
         self.command_topic = command_topic
@@ -51,6 +52,7 @@ class Model:
         self.sensor_data_msg_types = sensor_data_msg_types
         self.push_state_srv = push_state_srv
         self.push_readings_srv = push_readings_srv
+        self.parse_device_state = parse_device_state
 
 
 pure_cool_link = Model(
